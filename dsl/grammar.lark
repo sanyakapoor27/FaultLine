@@ -1,0 +1,79 @@
+?start: program
+
+program: stmt*
+
+stmt: scenario
+| if_stmt
+| loop_stmt
+| chaos_stmt
+
+scenario: "scenario" IDENTIFIER "{" chaos_stmt* "}"
+
+if_stmt: "if" "(" condition ")" "{" stmt* "}" ("else" "{" stmt* "}")?
+
+condition: metric_identifier operator value
+
+operator: ">" | "<" | ">=" | "<=" | "==" | "!="
+
+loop_stmt: "for" "(" IDENTIFIER "in" range ")" "{" stmt* "}"
+
+range: NUMBER ".." NUMBER
+
+chaos_stmt: node_stmt
+| partition_stmt
+| link_stmt
+
+node_stmt: "node" service_identifier "{" node_action* "}"
+
+node_action: delay_action
+| loss_action
+| crash_action
+| restart_action
+
+delay_action: "delay" duration ("jitter" duration)?
+
+loss_action: "loss" percentage
+
+crash_action: "crash"
+
+restart_action: "restart"
+
+partition_stmt: "partition" filter "from" filter ("duration" duration)?
+
+link_stmt: "link" service_identifier "->" service_identifier "{" link_action* "}"
+
+link_action: delay_action
+| loss_action
+| bandwidth_action
+
+bandwidth_action: "bandwidth" rate
+
+filter: key_value_pair+
+
+key_value_pair: IDENTIFIER "=" IDENTIFIER
+
+service_identifier: IDENTIFIER
+
+metric_identifier: IDENTIFIER
+
+duration: NUMBER time_unit
+
+time_unit: "ms" | "s" | "m"
+
+percentage: NUMBER "%"
+
+rate: NUMBER rate_unit
+
+rate_unit: "kbps" | "mbps" | "gbps"
+
+value: NUMBER | STRING
+
+IDENTIFIER: /[a-zA-Z_][a-zA-Z0-9_-]*/
+
+STRING: /"[^"]*"/
+
+NUMBER: /\d+(.\d+)?/
+
+%import common.WS
+%ignore WS
+%ignore ///[^\n]*/
