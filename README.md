@@ -120,5 +120,3 @@ scenario docker-auto-chaos {
     }
 }
 ```
-
-MIT License © 2025 \[Your Name]
