@@ -76,6 +76,9 @@ class Executor:
         if self._evaluate_condition(if_stmt.condition):
             print("[Network Chaos] Condition is TRUE. Executing 'then' block...")
             for stmt in if_stmt.then_branch:
+                print(if_stmt)
+                print(stmt)
+                print(if_stmt.then_branch)
                 self._execute_statement(stmt)
         elif if_stmt.else_branch:
             print("[Network Chaos] Condition is FALSE. Executing 'else' block...")

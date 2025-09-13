@@ -15,9 +15,9 @@ GRAMMAR = r"""
 
     if_stmt: "if" "(" condition ")" "{" stmt* "}" ("else" "{" stmt* "}")?
 
-    condition: metric_identifier operator value
+    condition: metric_identifier OP value
     
-    operator: ">" | "<" | ">=" | "<=" | "==" | "!="
+    OP: ">" | "<" | ">=" | "<=" | "==" | "!="
 
     loop_stmt: "for" "(" IDENTIFIER "in" range ")" "{" stmt* "}"
     
@@ -95,23 +95,25 @@ class Transformer(Transformer):
         return Scenario(name=name, statements=statements)
     
     def if_stmt(self, items):
-        condition = items[0]
+        condition_node = items[0]
         then_branch = []
         else_branch = None
-        
+
+        current_branch = then_branch
         for item in items[1:]:
-            if isinstance(item, list):
-                if else_branch is None:
-                    then_branch = item
-                else:
-                    else_branch = item
-                    
+            # 'else' keyword is handled by Lark as a token/string
+            if isinstance(item, str) and item == 'else':
+                current_branch = else_branch = []
+            else:
+                current_branch.append(item)  # <-- append directly, don't expect a list
+
         return IfStatement(
-            condition=condition,
+            condition=condition_node,
             then_branch=then_branch,
             else_branch=else_branch
         )
-    
+
+
     def condition(self, items):
         return Condition(
             metric=str(items[0]),
@@ -122,13 +124,21 @@ class Transformer(Transformer):
     def loop_stmt(self, items):
         variable = str(items[0])
         range_obj = items[1]
-        body = items[2:] if len(items) > 2 else []
+        body = []
+
+        for stmt in items[2:]:
+            if isinstance(stmt, list):
+                body.extend(stmt)
+            else:
+                body.append(stmt)
+
         return LoopStatement(
             variable=variable,
             start=range_obj[0],
             end=range_obj[1],
             body=body
         )
+
     
     def range(self, items):
         return (int(items[0]), int(items[1]))
